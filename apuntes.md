@@ -2,8 +2,8 @@
 
 ### Requisitos
 
-- Cantidad de campos por archivo
-- Cantidad de campos sin informacion
+- Cantidad de campos por archivo. Hecho 
+- Cantidad de campos sin informacion. Hecho
 - Varianza de los campos que contengan informacion numerica
 - Cantidad de elementos distintos por cada campo con informacion no numerica
 - cantidad de elementos con baja frecuencia
@@ -23,6 +23,6 @@ Se debe justificar por que se eligio la base de datos no relacional, en base a l
 
 ### Diseño del esquema
 
-Como se va aindezar y modelar los encabezados
+Como se va indexar y modelar los encabezados
 
 ### Informe y presentacion
