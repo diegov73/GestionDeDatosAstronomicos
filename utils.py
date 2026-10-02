@@ -136,7 +136,7 @@ def obtener_varianza(df: pd.DataFrame, guardar_en: str) -> None:
 
 def cardinalidad_no_numerica(df: pd.DataFrame, guardar_en: str) -> None:
     columna_datos = [c for c in df.columns if c != "__archivo__"]
-    df_num = df[columna_datos].apply(pd.to_numeric, errors='coerse')
+    df_num = df[columna_datos].apply(pd.to_numeric, errors='coerce')
     columnas_numericas = df_num.dropna(how='all', axis=1).columns
 
     columnas_no_numericas = [c for c in columna_datos if c not in columnas_numericas]
