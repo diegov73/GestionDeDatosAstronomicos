@@ -119,3 +119,34 @@ def save_dataframe(df: pd.DataFrame, ruta_destino: str) -> None:
 
     df.to_csv(ruta_destino, index=False, encoding="utf-8")
     print(f"archivo guardado exitosamente en: {ruta_destino}")
+
+def obtener_varianza(df: pd.DataFrame, guardar_en: str) -> None:
+    columna_datos = [c for c in df.columns if c != "__archivo__"]
+    df_num = df[columna_datos].apply(pd.to_numeric, errors='coerce')
+    columnas_numericas = df_num.dropna(how="all", axis=1)
+    varianza = columnas_numericas.var(ddof=1)
+    varianza = varianza.dropna().sort_values(ascending=False)
+    print("varianza calculada")
+
+    df_varianza = varianza.reset_index()
+    df_varianza.columns = ["campo", "varianza"]
+
+    df_varianza.to_csv(guardar_en, index=False, encoding="utf-8")
+    print(f"archivo guardado en: {guardar_en}")
+
+def cardinalidad_no_numerica(df: pd.DataFrame, guardar_en: str) -> None:
+    columna_datos = [c for c in df.columns if c != "__archivo__"]
+    df_num = df[columna_datos].apply(pd.to_numeric, errors='coerse')
+    columnas_numericas = df_num.dropna(how='all', axis=1).columns
+
+    columnas_no_numericas = [c for c in columna_datos if c not in columnas_numericas]
+
+    cardinalidad = df[columnas_no_numericas].nunique(dropna=True)
+    cardinalidad = cardinalidad.sort_values(ascending=False)
+    print("cardinalidad calculada")
+
+    df_cardinalidad = cardinalidad.reset_index()
+    df_cardinalidad.columns = ["campo", "elementos_distintos"]
+
+    df_cardinalidad.to_csv(guardar_en, index=False, encoding="utf-8")
+    print(f"archivo guardado en: {guardar_en}")

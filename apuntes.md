@@ -4,8 +4,8 @@
 
 - Cantidad de campos por archivo. Hecho 
 - Cantidad de campos sin informacion. Hecho
-- Varianza de los campos que contengan informacion numerica
-- Cantidad de elementos distintos por cada campo con informacion no numerica
+- Varianza de los campos que contengan informacion numerica. Hecho
+- Cantidad de elementos distintos por cada campo con informacion no numerica. Hecho
 - cantidad de elementos con baja frecuencia
 
 #### Campos obligatorios
