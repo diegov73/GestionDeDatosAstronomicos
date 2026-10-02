@@ -83,4 +83,39 @@ def save_csv_2(resume: dict, nombre: str) -> None:
                 datos["campos_sin_informacion"]
     ])
     
-def to_pandas()        
+def to_pandas(ruta_folder: str) -> pd.DataFrame:
+    filas = []
+
+    archivos_fits = list(Path(ruta_folder).rglob("*.fits"))
+
+    for archivo in archivos_fits:
+        if archivo.name.startswith("._"):
+            continue
+
+        try:
+            with fits.open(archivo, memmap=True) as hdul:
+                
+                hdr_dict = {}
+                
+                for k, v in hdul[0].header.items():
+                    if not k or k in ("COMMENT", "HISTORY", ""):
+                        continue
+
+                    hdr_dict[k] = v
+
+                hdr_dict["__archivo__"] = str(archivo.resolve())
+                filas.append(hdr_dict)
+
+        except Exception as e:
+            print(f"errir en {archivo}: {e}")
+
+    df = pd.DataFrame(filas)
+    print("Datos trasladados a dataFrame de pandas")
+    return df
+
+def save_dataframe(df: pd.DataFrame, ruta_destino: str) -> None:
+
+    Path(ruta_destino).parent.mkdir(parents=True, exist_ok=True)
+
+    df.to_csv(ruta_destino, index=False, encoding="utf-8")
+    print(f"archivo guardado exitosamente en: {ruta_destino}")
