@@ -150,3 +150,34 @@ def cardinalidad_no_numerica(df: pd.DataFrame, guardar_en: str) -> None:
 
     df_cardinalidad.to_csv(guardar_en, index=False, encoding="utf-8")
     print(f"archivo guardado en: {guardar_en}")
+
+def Elementos_con_baja_frecuencia(df: pd.DataFrame, guardar_en: str) -> None:
+    columna_datos = [c for c in df.columns if c != "__archivo__"]
+    df_num = df[columna_datos].apply(pd.to_numeric, errors='coerce')
+    columnas_numericas = df_num.dropna(how='all', axis=1).columns
+
+    columnas_no_numericas = [c for c in columna_datos if c not in columnas_numericas]
+
+    resultados = []
+
+    for col in columnas_no_numericas:
+        conteo = df[col].dropna().value_counts()
+        conteo = df[col].dropna().value_counts()
+        for valor, frec in conteo.items():
+            resultados.append({
+                "campo": col,
+                "valor": valor,
+                "frecuencia": frec
+            })
+    
+    df_frecuencias = pd.DataFrame(resultados)
+
+    if not df_frecuencias.empty:
+        df_frecuencias = df_frecuencias.sort_values(by=["frecuencia", "campo"], ascending=[True, True])
+
+    print("frecuencias de elementos calculadas")
+
+    df_frecuencias.to_csv(guardar_en, index=False, encoding="utf-8")
+    print(f"archivo guardado en: {guardar_en}")
+
+    

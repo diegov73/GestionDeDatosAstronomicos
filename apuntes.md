@@ -6,7 +6,7 @@
 - Cantidad de campos sin informacion. Hecho
 - Varianza de los campos que contengan informacion numerica. Hecho
 - Cantidad de elementos distintos por cada campo con informacion no numerica. Hecho
-- cantidad de elementos con baja frecuencia
+- cantidad de elementos con baja frecuencia. hecho
 
 #### Campos obligatorios
 
