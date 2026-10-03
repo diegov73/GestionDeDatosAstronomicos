@@ -23,7 +23,7 @@ def photo(target: str) -> None:
     plt.figure(figsize=(8, 8))
     norm = ImageNormalize(data, interval=ZScaleInterval())
     plt.imshow(data, cmap="gray", origin= "lower", norm=norm)
-    plt.colorbar(label="Intensida")
+    plt.colorbar(label="Intensidad")
     plt.title(f"FITS viewer - {target}")
     plt.show()
 
@@ -67,9 +67,9 @@ def save_csv_1(resume: dict, nombre: str) -> None:
         writer = csv.writer(f)
         writer.writerow(["archivo", "sumatoria_campos"])
 
-        for archivo, sumatoria in resume.items():
-            writer.writerow([archivo, sumatoria])
-            print("archivo guardado")
+    for archivo, sumatoria in resume.items():                                                                                                        
+        writer.writerow([archivo, sumatoria])                                                                                                        
+    print(f"archivo guardado en: {nombre}")  
             
 def save_csv_2(resume: dict, nombre: str) -> None:
     with open(nombre, mode="w", newline="", encoding="utf-8") as f:
@@ -77,11 +77,12 @@ def save_csv_2(resume: dict, nombre: str) -> None:
         writer.writerow(["archivo", "sumatoria_campo", "campos_sin_informacion"])
 
         for archivo, datos in resume.items():
-            writer.writerow([
-                archivo,
-                datos["total_campos"],
-                datos["campos_sin_informacion"]
-    ])
+        writer.writerow([                                                                                                                            
+            archivo,                                                                                                                                 
+            datos["total_campos"],                                                                                                                   
+            datos["campos_sin_informacion"]                                                                                                          
+        ])                                                                                                                                           
+    print(f"archivo guardado en: {nombre}")  
     
 def to_pandas(ruta_folder: str) -> pd.DataFrame:
     filas = []
@@ -107,7 +108,7 @@ def to_pandas(ruta_folder: str) -> pd.DataFrame:
                 filas.append(hdr_dict)
 
         except Exception as e:
-            print(f"errir en {archivo}: {e}")
+            print(f"error en {archivo}: {e}")
 
     df = pd.DataFrame(filas)
     print("Datos trasladados a dataFrame de pandas")
