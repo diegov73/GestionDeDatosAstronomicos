@@ -12,14 +12,15 @@
 
 Los siguientes campos se deben evaluar si o si:
 
-- **RA:** Right ascension
-- **DEC:** declination
-- **DATE-OBS**
-- **OBJETC**
+- **RA (Right ascension):** Presente en 269 archivos. Los 18 archivos de categoría SCIENCE lo poseen. Se normalizará para derivar la longitud espacial.
+- **DEC (Declination):** Presente en 269 archivos. Los 18 archivos de categoría SCIENCE lo poseen. Se utilizará como latitud espacial.
+- **DATE-OBS:** 1.861 valores distintos. Se preserva íntegro para indexar y permitir consultas rápidas por rangos de fechas.
+- **OBJECT:** 18 valores distintos. Fundamental preservarlo en la raíz del documento para indexar y ejecutar búsquedas por nombre de objeto.
 
 ### Definicion de tecnologias
 
-Se debe justificar por que se eligio la base de datos no relacional, en base a lo visto en clases
+Se debe justificar por que se eligio la base de datos no relacional, en base a lo visto en clases.
+
 Para este proyecto se utilizará una arquitectura híbrida: una **Base de Datos Documental (MongoDB)** para almacenar e indexar los metadatos y un sistema de almacenamiento secundario (Object Storage o File System) para los archivos binarios pesados (FITS). 
 
 Los archivos FITS no deben incrustarse en la base de datos, ya que esto saturaría el rendimiento y la memoria del motor. En su lugar, el archivo pesado se guarda externamente y el documento en MongoDB conserva una ruta (URI) estable hacia él. De esta forma, el motor de búsqueda puede consultar los metadatos rápidamente sin verse lastrado por el transporte de imágenes pesadas.
