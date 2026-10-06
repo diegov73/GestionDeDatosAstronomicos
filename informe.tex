@@ -1,0 +1,515 @@
+\documentclass[10pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage{lmodern}
+\usepackage[font=footnotesize,labelfont=bf,labelsep=period]{caption}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage[lmargin=2cm, rmargin=2cm, top=2.8cm, bottom=2.2cm, headheight=1.4cm]{geometry}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+
+% --- DEFINICIÓN DE COLORES Y ENLACES ---
+\definecolor{darkblue}{RGB}{18, 52, 86}
+\definecolor{udpred}{RGB}{204, 9, 47}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=darkblue,
+    citecolor=udpred,
+    urlcolor=darkblue,
+    pdfauthor={Diego Valdés},
+    pdftitle={Proyecto Semestral: Gestión de Datos Astronómicos - Primera Entrega}
+}
+
+% --- ENCABEZADOS Y PIES DE PÁGINA (SEGÚN FORMATO INFORME) ---
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[R]{\footnotesize\sffamily Facultad de Ingeniería y Ciencias}
+\fancyhead[L]{%
+    \IfFileExists{logoUDP.png}{%
+        \includegraphics[height=1.0cm]{logoUDP.png}%
+    }{%
+        \IfFileExists{logo2.png}{%
+            \includegraphics[height=1.0cm]{logo2.png}%
+        }{%
+            \textbf{\color{udpred}udp} \textsc{\scriptsize Universidad Diego Portales}%
+        }%
+    }%
+}
+
+\fancyfoot{}
+\fancyfoot[R]{\sffamily\thepage}
+\renewcommand{\headrulewidth}{0.9pt}
+\renewcommand{\footrulewidth}{0.5pt}
+
+\begin{document}
+\date{}  
+
+% =============================================================
+% PORTADA INSTITUCIONAL (SEGÚN FORMATO INFORME TIPO)
+% =============================================================
+\begin{titlepage}
+\begin{center}
+    \vspace*{0.5\baselineskip}
+    
+    \IfFileExists{logoUDP.png}{%
+        \includegraphics[width=6.5cm]{logoUDP.png}\\[0.6cm]
+    }{%
+        \IfFileExists{logo2.png}{%
+            \includegraphics[width=6.5cm]{logo2.png}\\[0.6cm]
+        }{%
+            {\bf\Huge\color{udpred}udp}\\[0.3cm]
+            {\bf\large UNIVERSIDAD DIEGO PORTALES}\\[0.6cm]
+        }%
+    }
+    
+    {\fontsize{11}{14}\selectfont \textbf{FACULTAD DE INGENIERÍA Y CIENCIAS}}\\[0.2cm]
+    {\fontsize{10}{12}\selectfont \textbf{ESCUELA DE INFORMÁTICA Y TELECOMUNICACIONES}}\\[0.6cm]
+
+    \hrule height 0.5pt
+    \vspace{1.2mm}
+    \hrule height 1.5pt
+    \vspace*{1.2\baselineskip}
+   
+    {\bf\fontsize{16}{20}\selectfont Proyecto Semestral: Gestión de Datos Astronómicos}\\[0.4cm]
+    {\bf\fontsize{13}{16}\selectfont Entrega 1: Análisis Exploratorio, Selección Tecnológica y Modelado NoSQL}\\[0.35cm]
+    {\bf\it\fontsize{11}{14}\selectfont Big Data -- Sección 2 (Segundo Semestre 2026)}\\[1\baselineskip]
+
+    \hrule height 0.5pt
+    \vspace{1.2mm}
+    \hrule height 1.5pt
+    \vspace*{3.5\baselineskip}
+    
+    \begin{minipage}{0.85\textwidth}
+        \fontsize{11}{16}\selectfont
+        \textbf{Profesor:} Sebastián I. Alvarado Aceituno \quad (\texttt{sebastian.alvarado2@mail.udp.cl})\\[0.3cm]
+        \textbf{Alumno:} Diego Valdés \quad (\texttt{diego.valdes5@mail.udp.cl})\\[0.3cm]
+        \textbf{Carrera:} Ingeniería Civil en Informática y Telecomunicaciones\\[0.3cm]
+        \textbf{Fecha de Entrega:} Octubre de 2026
+    \end{minipage}
+
+\end{center}
+\end{titlepage}
+
+% =============================================================
+% ÍNDICE DE CONTENIDOS
+% =============================================================
+\pagenumbering{alph}
+\thispagestyle{empty}
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+
+% =============================================================
+% RESUMEN (EXACTAMENTE UN PÁRRAFO SEGÚN GUÍA OFICIAL)
+% =============================================================
+\section*{Resumen}
+\addcontentsline{toc}{section}{Resumen}
+
+En el presente trabajo se diseña la arquitectura de ingeniería de datos para el almacenamiento y búsqueda interactiva de observaciones astronómicas generadas por el espectrógrafo X-shooter del Observatorio Europeo Austral (ESO). A partir de una muestra de 1.861 archivos en formato Flexible Image Transport System (FITS), se llevó a cabo un análisis exploratorio riguroso de sus encabezados, evaluando la densidad de metadatos (entre 321 y 552 campos por archivo), la proporción de información vacía, la dispersión de 435 variables numéricas mediante varianza y la cardinalidad de 247 campos cualitativos. El análisis reveló una marcada heterogeneidad estructural y una concentración donde únicamente 18 archivos (0,97\%) corresponden a marcos científicos directos (\texttt{SCIENCE}), frente a un 98,9\% de calibraciones instrumentales (\texttt{CALIB}). Al contrastar estos resultados con las limitaciones del modelo relacional SQL frente a esquemas esparsos y patrones Entity-Attribute-Value (EAV), se justificó la adopción de una arquitectura híbrida compuesta por una Base de Datos Documental (MongoDB) para la indexación rápida de metadatos mediante índices geoespaciales \texttt{2dsphere} e índices B-Tree, junto con un sistema de almacenamiento desacoplado de objetos para los binarios pesados. Por último, se especificó el esquema conceptual del documento preservando la totalidad del encabezado original en un subdocumento anidado y se formalizaron las reglas de negocio para aislar los archivos de calibración del catálogo espacial principal, garantizando un motor de búsqueda escalable y de baja latencia para la comunidad astronómica.
+
+\vspace{0.8cm}
+
+% =============================================================
+% 1. INTRODUCCIÓN
+% =============================================================
+\section{Introducción}
+
+El Observatorio Europeo Austral (ESO) opera complejos telescópicos de vanguardia a nivel mundial en el desierto de Atacama, Chile. En particular, el \textit{Very Large Telescope} (VLT), ubicado en Cerro Paranal (Antofagasta), aloja el espectrógrafo multicanal \textbf{X-shooter}, instrumento capaz de registrar simultáneamente longitudes de onda desde el ultravioleta hasta el infrarrojo cercano (UVB, VIS, NIR) \cite{vernet2011xshooter}. Esta operación instrumental genera diariamente terabytes de datos astronómicos en formato binario estándar FITS (\textit{Flexible Image Transport System}) \cite{pence2010fits}. Cada evento observacional no produce un único archivo aislado, sino lotes combinados compuestos por marcos científicos principales (\textit{Science Frames}) y múltiples cuadros auxiliares de calibración instrumental (\textit{Bias}, \textit{Flats}, \textit{Arcs}, \textit{Standard Stars}).
+
+Frente a este escenario de alta volumetría y variabilidad de información, se requiere el diseño de una arquitectura moderna de ingeniería de datos. El objetivo principal es construir un motor de búsqueda que permita a los investigadores de todo el mundo consultar y localizar de forma instantánea las rutas de almacenamiento de las imágenes científicas basándose en sus coordenadas celestes fundamentales (\textit{Right Ascension} y \textit{Declination}), su fecha de observación (\texttt{DATE-OBS}), el nombre del objeto celeste observado (\texttt{OBJECT}) y otros atributos instrumentales relevantes.
+
+Para dar cumplimiento a estos requerimientos, el trabajo se estructuró mediante un flujo metodológico riguroso:
+\begin{enumerate}
+    \item \textbf{Ingesta y Análisis Exploratorio:} Se procesaron 1.861 archivos reales de X-shooter utilizando herramientas de procesamiento matricial y lectura astronómica, consolidando métricas cuantitativas sobre cantidad de campos por archivo, densidad de vacíos, varianza en variables numéricas, cardinalidad no numérica y detección de valores singulares u \textit{outliers}.
+    \item \textbf{Evaluación y Selección Tecnológica:} Los hallazgos estadísticos se contrastaron con la taxonomía de bases de datos revisada en la cátedra de Big Data, evaluando la inviabilidad de modelos relacionales tradicionales (SQL) y sustentando la elección de un motor NoSQL adecuado.
+    \item \textbf{Modelado Lógico y Reglas de Negocio:} Se diseñó la estructura de datos orientada a documentos, la estrategia de indexación geoespacial esférica y las reglas de negocio que rigen el ciclo de vida de los datos.
+\end{enumerate}
+
+\subsection{Objetivos}
+\begin{itemize}
+    \item \textbf{Objetivo General:} Diseñar e implementar conceptualmente una arquitectura de almacenamiento y consulta para metadatos astronómicos basada en tecnologías NoSQL, garantizando búsquedas de baja latencia por coordenadas y atributos temporales.
+    \item \textbf{Objetivos Específicos:}
+    \begin{enumerate}
+        \item Ejecutar un análisis exploratorio integral sobre los encabezados de una muestra representativa de archivos FITS de la ESO.
+        \item Identificar y justificar los atributos primordiales a preservar en el modelo de búsqueda (\texttt{RA}, \texttt{DEC}, \texttt{DATE-OBS}, \texttt{OBJECT}).
+        \item Evaluar comparativamente las tecnologías de bases de datos vistas en cátedra y fundamentar la arquitectura técnica óptima.
+        \item Formalizar el modelo de datos documental enriquecido con tipos geoespaciales y establecer reglas de negocio para optimizar la indexación activa frente al almacenamiento secundario.
+    \end{enumerate}
+\end{itemize}
+
+\subsection{Estructura del Informe}
+El presente informe se organiza de acuerdo a la estructura académica solicitada: la Sección \ref{sec:marco_teorico} presenta la fundamentación teórica y conceptos técnicos con citas bibliográficas; la Sección \ref{sec:metodologia} detalla la metodología y ejecución experimental del análisis de datos; la Sección \ref{sec:resultados} expone el análisis estadístico, la justificación tecnológica y el modelado conceptual del sistema; la Sección \ref{sec:conclusiones} resume las conclusiones y la verificación de objetivos; y la Sección \ref{sec:bibliografia} reúne las referencias bibliográficas.
+
+% =============================================================
+% 2. MARCO TEÓRICO / FUNDAMENTACIÓN TEÓRICA
+% =============================================================
+\section{Marco Teórico}\label{sec:marco_teorico}
+
+\subsection{El Estándar Astronómico FITS}
+El estándar \textit{Flexible Image Transport System} (FITS), adoptado oficialmente por la Unión Astronómica Internacional (IAU), es el formato de datos hegemónico en la astronomía profesional moderna \cite{pence2010fits}. Un archivo FITS está compuesto por una o más unidades denominadas \textit{Header Data Units} (HDU). El HDU primario consta de un encabezado de texto estructurado en bloques fijos de 2.880 bytes, donde cada registro posee 80 caracteres con pares clave-valor (\textit{keywords} de hasta 8 caracteres), seguido opcionalmente por una matriz binaria multidimensional que contiene la imagen o el espectro físico obtenido por los detectores.
+
+\subsection{Sistema de Coordenadas Ecuatoriales}
+En astrometría, la posición aparente de los cuerpos en la esfera celeste se determina mediante el sistema de coordenadas ecuatoriales \cite{karttunen2016fundamental}:
+\begin{itemize}
+    \item \textbf{Ascensión Recta (RA, $\alpha$):} Distancia angular medida hacia el este sobre el ecuador celeste a partir del equinoccio vernal. En catálogos astronómicos se expresa usualmente en grados sexagesimales continuos dentro del intervalo $[0^{\circ}, 360^{\circ})$ o en horas ($0^{\text{h}}$ a $24^{\text{h}}$).
+    \item \textbf{Declinación (DEC, $\delta$):} Ángulo medido perpendicularmente al norte ($+$) o sur ($-$) del ecuador celeste, confinado al intervalo cerrado $[-90^{\circ}, +90^{\circ}]$.
+\end{itemize}
+
+\subsection{Paradigma Big Data y Familias de Bases de Datos}
+La astronomía observacional constituye un dominio paradigmático de Big Data caracterizado por las tres dimensiones fundamentales: \textit{Volumen} (decenas de terabytes generados de forma periódica), \textit{Velocidad} (adquisición instrumental continua) y \textit{Variedad} (metadatos heterogéneos según configuraciones instrumentales) \cite{zhang2015bigdata}. La gestión de esta heterogeneidad demanda evaluar las siguientes familias de almacenamiento revisadas en la cátedra:
+
+\begin{enumerate}
+    \item \textbf{Bases de Datos Relacionales (RDBMS/SQL):} Diseñadas bajo el modelo relacional de Edgar F. Codd \cite{codd1970relational}, demandan esquemas rígidos definidos \textit{a priori}. Cuando existen cientos de atributos opcionales que varían entre instrumentos, el almacenamiento relacional sufre el fenómeno de matrices ultra-dispersas (\textit{sparse matrices}) saturadas de valores nulos, o incurre en el antipatrón \textit{Entity-Attribute-Value} (EAV), el cual degrada el rendimiento de consulta mediante operaciones masivas de reunión (\textit{JOIN}) \cite{celko2014sql}.
+    \item \textbf{Bases de Datos Distribuidas en Disco (e.g. Apache Hadoop / HDFS):} Plataformas de almacenamiento en bloques distribuidos con procesamiento por lotes (\textit{batch}) mediante MapReduce o motores de consulta columnar sobre HDFS \cite{white2012hadoop}. Resultan ineficientes para responder consultas de búsqueda interactivas con latencias de milisegundos.
+    \item \textbf{Bases de Datos Distribuidas en Memoria (e.g. Apache Spark):} Plataformas analíticas basadas en colecciones distribuidas en memoria RAM (\textit{Resilient Distributed Datasets}) \cite{zaharia2016apache}. Están concebidas para transformaciones analíticas complejas y algoritmos iterativos, pero no proporcionan un catálogo transaccional e indexado para búsquedas puntuales directas.
+    \item \textbf{Bases de Datos Documentales (e.g. MongoDB):} Sistemas NoSQL orientados al almacenamiento de documentos jerárquicos semipares autodescriptivos (JSON/BSON) sin esquemas restrictivos \cite{chodorow2013mongodb}. Permiten documentos con atributos variables, subdocumentos anidados e índices secundarios complejos.
+    \item \textbf{Bases de Datos Orientadas a Grafos (e.g. Neo4j):} Motores especializados en la navegación eficiente de relaciones complejas entre entidades según el modelo de grafos de propiedades \cite{robinson2015graph}. No aportan ventajas en registros de observación independientes y desacoplados.
+    \item \textbf{Bases de Datos Orientadas a Columnas (e.g. Apache Cassandra):} Diseñadas bajo particionamiento distribuido y familias de columnas para escrituras masivas de alto rendimiento \cite{lakshman2010cassandra}. Su modelado rígido subordinado a patrones de consulta predefinidos limita las búsquedas espaciales multidimensionales ad-hoc.
+    \item \textbf{Bases de Datos Clave-Valor (e.g. Redis):} Almacenes en memoria de acceso ultra-rápido indexados por llaves atómicas simples \cite{carlson2013redis}, sin soporte para consultas por rango geoespacial o filtros cruzados de atributos internos.
+\end{enumerate}
+
+\subsection{Modelado Geoespacial y GeoJSON}
+El estándar GeoJSON codifica geometrías espaciales en formato JSON mediante la especificación de coordenadas esféricas normalizadas ordenadas como $[\text{longitud}, \text{latitud}]$ \cite{butler2016geojson}. Motores documentales modernos integran índices esféricos de superficie (\texttt{2dsphere}), los cuales descomponen la esfera celeste mediante el algoritmo de proyección jerárquica de celdas S2 de Google, posibilitando consultas de proximidad (\textit{cone search}) con complejidad logarítmica \cite{mongodb_geo}.
+
+% =============================================================
+% 3. DISEÑO, METODOLOGÍA Y EJECUCIÓN EXPERIMENTAL
+% =============================================================
+\section{Desarrollo y Metodología}\label{sec:metodologia}
+
+En concordancia con los requerimientos formales, en esta sección se documentan de forma sistemática y reproducible las fases operacionales, herramientas y procedimientos ejecutados, sin emitir juicios de valor ni adelantar resultados de análisis.
+
+\subsection{Entorno Tecnológico}
+El procedimiento se desarrolló sobre el entorno de cómputo Python 3.10+, utilizando las siguientes bibliotecas especializadas:
+\begin{itemize}
+    \item \texttt{astropy.io.fits}: Motor de deserialización de encabezados FITS astronómicos en estructuras de memoria tipo diccionario.
+    \item \texttt{pandas}: Plataforma de estructuración matricial (\texttt{DataFrame}) para vectorización de operaciones y cálculos estadísticos de agregación.
+    \item \texttt{pathlib}: Navegación recursiva del sistema de archivos local para la detección de árboles de directorios de muestra.
+    \item \texttt{csv}: Persistencia estructurada de reportes métricos intermedios delimitados por comas.
+\end{itemize}
+
+\subsection{Flujo de Ingesta y Extracción de Encabezados}
+El conjunto de datos provisto se organizó en subdirectorios correspondientes a distintas jornadas observacionales del instrumento X-shooter (fechadas correlativamente de \texttt{XSHOO.2026-09-04} a \texttt{XSHOO.2026-09-09}). 
+
+El algoritmo de extracción implementó un recorrido iterativo exhaustivo sobre la jerarquía de carpetas. Durante la inspección, se excluyeron los archivos temporales generados por el sistema operativo (prefijo \texttt{.\_}). Para cada archivo con extensión \texttt{.fits}, se efectuó la apertura controlada del HDU primario utilizando el mecanismo de mapeo de memoria (\texttt{memmap=True}) para asegurar un uso eficiente de la memoria de trabajo. Durante la conformación del diccionario de metadatos, se depuraron las palabras clave internas no descriptivas de metadatos instrumentales (\texttt{COMMENT}, \texttt{HISTORY} y claves vacías). Adicionalmente, se adjuntó la ruta absoluta canónica bajo el campo \texttt{\_\_archivo\_\_} para garantizar la trazabilidad del archivo binario. El universo consolidado de encabezados se transformó en una matriz tabular persistida en formato CSV.
+
+\subsection{Procedimientos Estadísticos del Análisis Exploratorio}
+Para dar respuesta a los cinco requisitos estadísticos formulados en la guía de trabajo, se diseñaron cinco procedimientos computacionales específicos:
+\begin{enumerate}
+    \item \textbf{Cálculo de cantidad de campos por archivo:} Se cuantificó la cardinalidad del conjunto de claves presentes en el encabezado primario de cada archivo FITS individual, generando el archivo métrico \texttt{csv/sumatoria\_campos.csv}.
+    \item \textbf{Cálculo de campos sin información por archivo:} Para cada observación, se evaluaron los valores asociados a cada clave, contabilizando aquellos registrados como nulos (\texttt{None}) o compuestos por cadenas vacías o espacios en blanco tras su normalización textual. Los resultados se guardaron en \texttt{csv/campos\_sin\_informacion.csv}.
+    \item \textbf{Cálculo de varianza en campos con información numérica:} Se seleccionaron las columnas de la matriz maestro excluyendo el identificador de ruta. Se aplicó una conversión a formato numérico de coma flotante, asignando valores no representables como nulos de forma controlada. Se aislaron las columnas que contenían al menos un registro numérico válido y se computó la varianza muestral con corrección de Bessel ($ddof=1$):
+    \begin{equation}
+        s^2 = \frac{1}{n-1}\sum_{i=1}^{n}(x_i - \bar{x})^2
+    \end{equation}
+    Las variables fueron ordenadas descendentemente por su valor de varianza y tabuladas en \texttt{csv/varianza.csv}.
+    \item \textbf{Cálculo de cardinalidad de campos no numéricos:} Se identificaron las columnas cualitativas complementarias y se ejecutó la medición del número de elementos distintos mediante recuento de valores únicos (omitiendo valores nulos), exportando el reporte ordenado a \texttt{csv/cardinalidad\_no\_numerica.csv}.
+    \item \textbf{Detección de elementos con baja frecuencia (\textit{outliers}):} Sobre cada variable cualitativa, se extrajo la tabla de frecuencia absoluta para cada uno de sus valores observados. La terna compuesta por el nombre del atributo, el valor específico y su frecuencia absoluta fue ordenada de forma ascendente en el archivo \texttt{csv/elementos\_no\_numericos.csv}.
+\end{enumerate}
+
+\subsection{Metodología de Modelado y Definición de Reglas}
+Con la base estadística consolidada, se procedió a: (1) contrastar los requerimientos de consulta espacial y temporal frente a los tipos de bases de datos de cátedra; (2) diseñar el esquema documental definiendo la elevación de campos de primer nivel y la encapsulación del encabezado restante; (3) derivar una transformación matemática para representar la Ascensión Recta en coordenadas de longitud esférica GeoJSON; y (4) formalizar reglas lógicas de negocio para discriminar observaciones científicas de archivos de calibración.
+
+% =============================================================
+% 4. ANÁLISIS Y RESULTADOS
+% =============================================================
+\section{Análisis e Interpretación de Resultados}\label{sec:resultados}
+
+\subsection{Resultados del Análisis Exploratorio}
+El procesamiento del conjunto de datos completo arrojó un universo de \textbf{1.861 archivos FITS} válidos. Los resultados del análisis exploratorio se detallan a continuación.
+
+\subsubsection{Cantidad de campos y densidad de vacíos por archivo}
+En la Tabla \ref{tab:resumen_campos} se presenta el comportamiento de la densidad de metadatos en los encabezados.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Resumen estadístico de campos por archivo y campos sin información.}
+\label{tab:resumen_campos}
+\begin{tabularx}{\textwidth}{lccccX}
+\toprule
+\textbf{Métrica} & \textbf{Mínimo} & \textbf{Máximo} & \textbf{Media} & \textbf{Desv. Est.} & \textbf{Comportamiento Observado} \\
+\midrule
+Campos por archivo & 321 & 552 & 448,3 & 62,4 & Distribución bimodal (picos en $\approx 440$ y $550$). \\
+Campos vacíos por archivo & 0 & 1 & 0,89 & 0,31 & Completitud $>99,8\%$; máximo 1 vacío por archivo. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{Interpretación:} La cantidad de atributos presenta una oscilación sustancial entre 321 y 552 campos por observación. Este fenómeno no es accidental: el espectrógrafo X-shooter opera tres brazos ópticos independientes (UVB, VIS, NIR) más sensores auxiliares del corrector atmosférico (ADC). Cuando la observación involucra la totalidad de los brazos y subsistemas mecánicos, se incorporan automáticamente hasta 230 claves adicionales de telemetría, temperaturas y voltajes de detectores. En cuanto a los campos vacíos, la completitud de la muestra es extraordinariamente alta: ningún archivo posee más de un campo sin valor, lo que demuestra que los encabezados producidos por la ESO presentan registros consistentes en su estructura interna individual.
+
+\subsubsection{Varianza de variables numéricas}
+El análisis identificó \textbf{435 campos numéricos}. La Tabla \ref{tab:varianza_top} sintetiza los comportamientos de varianza muestral extrema.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Campos numéricos representativos con varianzas máximas y mínimas.}
+\label{tab:varianza_top}
+\begin{tabularx}{\textwidth}{lp{3.5cm}X}
+\toprule
+\textbf{Campo FITS} & \textbf{Varianza ($s^2$)} & \textbf{Significado Físico / Operacional} \\
+\midrule
+\texttt{ESO OBS NAME} & $1,65 \times 10^{32}$ & Identificadores de bloque de observación y programación. \\
+\texttt{DATASUM} & $1,50 \times 10^{18}$ & Suma de verificación (\textit{checksum}) de integridad del archivo binario. \\
+\texttt{ESO TEL TARG DELTA} & $8,07 \times 10^{10}$ & Coordenada sexagesimal de apuntamiento fino del telescopio VLT. \\
+\texttt{ESO INS ADC RA/DEC} & $3,84 \times 10^{9}$ & Ángulo del compensador de dispersión atmosférica. \\
+\midrule
+\texttt{SIMPLE}, \texttt{NAXIS}, \texttt{BZERO} & $0,00$ & Metadatos estructurales estándar e invariantes del formato FITS. \\
+\texttt{ESO INS TEMP21-24} & $0,00$ & Sensores criogénicos auxiliares inactivos o fijos en valor nominal. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{Interpretación:} Las variables con varianza masiva corresponden a estampas temporales continuas, números de bloque de observación e indicadores angulares de apuntamiento astronómico. En contraposición, existen 42 campos con varianza estrictamente cero ($s^2=0$). Estos representan constantes globales del formato FITS o banderas instrumentales que no varían entre observaciones y, por ende, no poseen poder discriminativo para indexación primaria.
+
+\subsubsection{Cardinalidad cualitativa y elementos de baja frecuencia}
+Se analizaron \textbf{247 campos no numéricos}. Los resultados de cardinalidad se resumen en la Tabla \ref{tab:cardinalidad}.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Cardinalidad de atributos cualitativos clave.}
+\label{tab:cardinalidad}
+\begin{tabularx}{\textwidth}{lclX}
+\toprule
+\textbf{Campo FITS} & \textbf{Valores Únicos} & \textbf{Categoría} & \textbf{Rol en el Motor de Búsqueda} \\
+\midrule
+\texttt{DATE-OBS} & 1.861 & Temporal & Marca cronológica exacta; clave para consultas por época. \\
+\texttt{ARCFILE} & 1.861 & Identificador & Nombre único e inmutable en el repositorio central de la ESO. \\
+\texttt{ORIGFILE} & 1.771 & Identificador & Nombre asignado por el sistema de control del instrumento. \\
+\texttt{ESO OBS START} & 50 & Lote & Agrupación de observaciones bajo un mismo bloque ejecutable. \\
+\texttt{OBJECT} & 18 & Astronómico & Nombre del cuerpo celeste objetivo de la observación. \\
+\texttt{ESO DPR TYPE} & 17 & Funcional & Subtipo de archivo (\texttt{OBJECT}, \texttt{FLAT}, \texttt{BIAS}, \texttt{WAVE}). \\
+\texttt{ESO DPR CATG} & 3 & Clasificación & Categoría mayor: \texttt{SCIENCE}, \texttt{CALIB}, \texttt{ACQUISITION}. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{Hallazgo Determinante:} Al inspeccionar los elementos de baja frecuencia u \textit{outliers} en relación a la categoría de producto (\texttt{ESO DPR CATG}), se constató que:
+\begin{itemize}
+    \item El campo \texttt{OBJECT} contiene únicamente 18 valores distintos. Al cruzar estos datos con la clasificación de producto, se descubrió que \textbf{únicamente 18 archivos corresponden a la categoría de ciencia (\texttt{SCIENCE})}, correspondiente a observaciones directas de cuerpos celestes.
+    \item Los restantes 1.843 archivos ($>98,9\%$ de la muestra) corresponden a tareas de calibración instrumental (\texttt{CALIB}: calibraciones de onda \texttt{WAVE}, campos planos \texttt{FLAT} y corrientes oscuras \texttt{BIAS}).
+    \item Las coordenadas espaciales \texttt{RA} y \texttt{DEC} están presentes en 269 archivos de la muestra, cubriendo la totalidad de los 18 archivos de ciencia. Durante las calibraciones internas de lámparas de arco dentro de la cúpula, el telescopio no se encuentra apuntando a fuentes celestes, por lo cual los encabezados carecen de coordenadas espaciales activas.
+\end{itemize}
+
+\subsubsection{Selección Justificada de Atributos Críticos}
+A partir de la evidencia analítica, se seleccionaron los siguientes atributos indispensables para ser preservados e indexados:
+\begin{enumerate}
+    \item \textbf{\texttt{RA} y \texttt{DEC}:} Par angular indispensable para el motor de búsqueda espacial.
+    \item \textbf{\texttt{DATE-OBS}:} Marca temporal requerida para filtrar campañas y series de tiempo.
+    \item \textbf{\texttt{OBJECT}:} Identificador del objetivo celeste; atributo primordial de consulta para astrónomos.
+    \item \textbf{\texttt{ARCFILE}:} Identificador único inmutable que asegura la localización del binario original.
+    \item \textbf{\texttt{ESO DPR CATG} y \texttt{ESO DPR TYPE}:} Discriminadores de calidad funcional (ciencia vs. calibración).
+    \item \textbf{\texttt{EXPTIME}:} Tiempo de exposición física en segundos, parámetro clave para análisis espectral.
+\end{enumerate}
+
+\subsection{Definición y Justificación de Tecnologías}
+
+\subsubsection{Inviabilidad del Enfoque Puramente Relacional (SQL)}
+El empleo de un motor relacional tradicional se descarta categóricamente debido a dos factores de diseño:
+\begin{itemize}
+    \item \textbf{Problema de la Tabla Monolítica Dispersa:} Si se intentara crear una tabla relacional unificada con las más de 550 columnas detectadas en la muestra, la matriz resultante estaría dominada por celdas con valores \texttt{NULL} (alta dispersión), desperdiciando almacenamiento en disco e índices. Asimismo, la incorporación de un nuevo instrumento o sensor requeriría costosas operaciones de modificación estructural (\texttt{ALTER TABLE}), incompatibles con un entorno de ingesta continua.
+    \item \textbf{Antipatrón EAV (Entity-Attribute-Value):} Si se pretendiera modelar los datos mediante tuplas normalizadas (\texttt{archivo\_id}, \texttt{clave}, \texttt{valor}), un único archivo de 500 atributos generaría 500 filas individuales. Resolver una consulta que involucre coordenadas (\texttt{RA, DEC}), fecha (\texttt{DATE-OBS}) y nombre (\texttt{OBJECT}) exigiría realizar al menos cuatro reuniones internas sucesivas (\texttt{JOIN}) sobre millones de filas, degradando severamente el tiempo de respuesta.
+\end{itemize}
+
+\subsubsection{Evaluación Comparativa de la Taxonomía NoSQL}
+La Tabla \ref{tab:comparacion_nosql} resume la evaluación de idoneidad técnica sobre las familias revisadas en clase.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Evaluación comparativa de familias de bases de datos para el catálogo astronómico.}
+\label{tab:comparacion_nosql}
+\begin{tabularx}{\textwidth}{>{\bfseries}p{3cm}XX>{\centering\arraybackslash}p{2.5cm}}
+\toprule
+Tecnología & Adecuación al Problema & Ventajas / Limitaciones & Decisión Técnica \\
+\midrule
+MongoDB (Documental) & Óptima: documentos flexibles JSON/BSON, índices geoespaciales \texttt{2dsphere} nativos y B-Tree secundarios. & Admite variabilidad de campos por archivo; consultas de proximidad rápidas; escalabilidad horizontal. & \textbf{Seleccionada para Metadatos} \\
+\addlinespace
+Object Storage (S3 / File System) & Óptima para la persistencia masiva desacoplada de los archivos binarios pesados FITS. & Evita saturar la base de datos documental con binarios de gran tamaño; acceso directo vía URI. & \textbf{Seleccionada para Binarios} \\
+\midrule
+Apache Hadoop / HDFS & Inadecuada: latencia elevada en consultas interactivas puntuales. & Orientado a procesamiento por lotes masivo, no a búsquedas en tiempo real. & Descartada \\
+\addlinespace
+Apache Spark & Inadecuada: motor de cómputo en memoria, no base de datos transaccional. & Excelente para procesamiento analítico, pero no para catálogo indexado persistente. & Descartada \\
+\addlinespace
+Neo4j (Grafos) & Inadecuada: el dominio no presenta topología de grafos densos. & Diseñada para relaciones complejas de red, no para catálogos de metadatos independientes. & Descartada \\
+\addlinespace
+Apache Cassandra & Parcial: modelo columnar rígido que requiere conocer las consultas de antemano. & Alta tasa de escritura, pero carece de indexación esférica 2D nativa eficiente. & Descartada \\
+\addlinespace
+Redis (Clave-Valor) & Inadecuada: almacén en memoria para estructuras simples. & No admite búsquedas por rango multidimensional o proyecciones sobre subcampos. & Descartada \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{Decisión Arquitectónica:} Se adopta una arquitectura desacoplada de dos niveles:
+\begin{enumerate}
+    \item \textbf{Capa de Binarios:} Los archivos FITS originales residen de forma inmutable en un sistema de almacenamiento de objetos (\textit{Object Storage} compatible con S3 o File System distribuido).
+    \item \textbf{Capa de Metadatos:} Una base de datos documental (MongoDB) almacena e indexa los metadatos relevantes para búsqueda, conservando un enlace directo (\texttt{storageUri}) hacia el archivo binario pesado.
+\end{enumerate}
+
+\subsection{Definición del Modelo de Datos y Reglas de Negocio}
+
+\subsubsection{Diseño Conceptual del Documento}
+El esquema se estructura mediante una \textbf{estrategia de elevación de atributos}: los campos frecuentemente consultados se posicionan en la raíz del documento para indexación acelerada, mientras que el encabezado FITS completo original se encapsula íntegramente dentro del subdocumento \texttt{header}, garantizando que ningún metadato instrumental se pierda.
+
+En la Tabla \ref{tab:diccionario_documento} se presenta la especificación formal del modelo de documento implementado.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Diccionario conceptual del documento de observación astronómica.}
+\label{tab:diccionario_documento}
+\begin{tabularx}{\textwidth}{lp{2.8cm}X}
+\toprule
+\textbf{Atributo} & \textbf{Tipo de Dato} & \textbf{Descripción y Propósito} \\
+\midrule
+\texttt{\_id} & String (UUID) & Identificador primario inmutable (corresponde a \texttt{ARCFILE}). \\
+\texttt{fileId} & String & Nombre único de archivo en el repositorio de la ESO. \\
+\texttt{sourceFile} & String & Nombre original del archivo en el sistema de control del telescopio. \\
+\texttt{instrument} & String & Instrumento de adquisición (e.g. \texttt{"XSHOOTER"}). \\
+\texttt{object} & String & Nombre de la fuente cósmica observada (\texttt{OBJECT}). \\
+\texttt{observedAt} & Date (ISO-8601) & Fecha y hora exacta de inicio de la exposición (\texttt{DATE-OBS}). \\
+\texttt{raDeg} & Float & Ascensión Recta original en grados sexagesimales $[0^{\circ}, 360^{\circ})$. \\
+\texttt{decDeg} & Float & Declinación original en grados sexagesimales $[-90^{\circ}, 90^{\circ}]$. \\
+\texttt{location} & GeoJSON (Point) & Objeto de coordenadas esféricas normalizadas $[\text{longitud}, \text{latitud}]$. \\
+\texttt{exposureSeconds} & Float & Duración de la exposición en segundos (\texttt{EXPTIME}). \\
+\texttt{product.category} & String & Categoría funcional del marco (\texttt{"SCIENCE"} o \texttt{"CALIB"}). \\
+\texttt{product.type} & String & Tipo específico de imagen (\texttt{"OBJECT"}, \texttt{"FLAT"}, \texttt{"BIAS"}). \\
+\texttt{storageUri} & String (URI) & Ruta unívoca hacia el archivo binario en el almacenamiento de objetos. \\
+\texttt{header} & Subdocumento & Contenedor íntegro de todos los registros clave-valor originales de FITS. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsubsection{Normalización Matemática Geoespacial}
+El motor de coordenadas esféricas de MongoDB y la especificación GeoJSON requieren que la longitud esté acotada al intervalo $[-180^{\circ}, +180^{\circ}]$ y la latitud a $[-90^{\circ}, +90^{\circ}]$. Dado que la Ascensión Recta se expresa convencionalmente en $[0^{\circ}, 360^{\circ})$, se aplica la función biyectiva:
+\begin{equation}
+\text{longitud} = 
+\begin{cases} 
+RA & \text{si } RA \leq 180^{\circ} \\ 
+RA - 360^{\circ} & \text{si } RA > 180^{\circ} 
+\end{cases}
+\qquad;\qquad
+\text{latitud} = DEC
+\end{equation}
+De esta forma, las coordenadas se almacenan en el campo \texttt{location} como un objeto GeoJSON de tipo \texttt{Point} con el par $[\text{longitud}, \text{latitud}]$.
+
+\subsubsection{Estrategia de Indexación}
+Para garantizar que las búsquedas se resuelvan en tiempo logarítmico sin incurrir en escaneos completos de colección (\textit{collection scans}):
+\begin{itemize}
+    \item \textbf{Índice Geoespacial Esférico (\texttt{location: "2dsphere"}):} Permite ejecutar consultas de cono espacial (\textit{cone search}) alrededor de un objeto astronómico mediante el cálculo de distancias angulares en radianes.
+    \item \textbf{Índice B-Tree en Fecha (\texttt{observedAt: 1}):} Facilita el filtrado por rangos temporales o épocas de observación.
+    \item \textbf{Índice B-Tree en Nombre (\texttt{object: 1}):} Habilita búsquedas directas y autocompletado por nombre de cuerpo celeste.
+    \item \textbf{Índice Compuesto (\texttt{\{"product.category": 1, "product.type": 1\}}):} Permite aislar rápidamente las observaciones de ciencia pura de las calibraciones.
+\end{itemize}
+
+\subsubsection{Reglas de Negocio}
+A partir del análisis exploratorio, se establecen dos reglas de negocio formales:
+\begin{enumerate}
+    \item \textbf{Regla 1 (Indexación Activa en Buscador Principal):} Únicamente los archivos clasificados como \texttt{product.category == "SCIENCE"} que cuenten con coordenadas celestes (\texttt{RA, DEC}) y fecha válidas se ingresan al catálogo activo con índice \texttt{2dsphere}. Esto garantiza que el motor de búsqueda espacial mantenga un índice sumamente compacto y de máxima velocidad para los astrónomos.
+    \item \textbf{Regla 2 (Partición a Almacenamiento Secundario / Frío):} Dado que el $98,9\%$ de los datos corresponde a marcos de calibración instrumental (\texttt{CALIB}), estos archivos binarios se derivan de inmediato a un almacenamiento de menor costo (\textit{Object Storage Cold / Glacier}). Sus metadatos se persisten en una colección secundaria de auditoría sin índice geoespacial, permitiendo su consulta únicamente cuando un investigador necesite reconstruir el proceso de calibración de un dato científico.
+\end{enumerate}
+
+% =============================================================
+% 5. CONCLUSIÓN
+% =============================================================
+\section{Conclusiones}\label{sec:conclusiones}
+
+En esta primera etapa del proyecto se cumplieron satisfactoriamente los objetivos propuestos para la plataforma de datos astronómicos del espectrógrafo X-shooter de la ESO:
+\begin{enumerate}
+    \item Se completó un análisis exploratorio riguroso sobre 1.861 archivos, determinando que los encabezados presentan alta completitud individual (menos de un campo vacío por archivo), alta variabilidad dimensional (321 a 552 claves) y una distribución asimétrica donde el 98,9\% corresponde a calibraciones y el 0,97\% a observaciones de ciencia directa.
+    \item Se demostró formalmente la inviabilidad de un modelo relacional tradicional debido a la dispersión masiva de esquemas esparsos y al sobrecosto inaceptable de reuniones en modelos EAV, justificando una arquitectura híbrida compuesta por MongoDB para metadatos y almacenamiento de objetos para binarios pesados.
+    \item Se diseñó un modelo de datos documental escalable con elevación de atributos clave (\texttt{RA}, \texttt{DEC}, \texttt{DATE-OBS}, \texttt{OBJECT}), normalización esférica a GeoJSON e indexación \texttt{2dsphere}, preservando la totalidad del encabezado original en un subdocumento anidado.
+    \item Las reglas de negocio formuladas protegen el desempeño del motor de búsqueda al particionar los datos de calibración hacia almacenamiento secundario.
+\end{enumerate}
+
+% =============================================================
+% 6. BIBLIOGRAFÍA
+% =============================================================
+\section{Bibliografía}\label{sec:bibliografia}
+
+\begin{thebibliography}{99}
+\setlength{\itemsep}{2pt}
+\setlength{\parskip}{0pt}
+\small
+
+\bibitem{pence2010fits}
+W.~D.~Pence, L.~Chiappetti, C.~G.~Page, R.~A.~Shaw, and E.~Stobie,
+\newblock ``Definition of the Flexible Image Transport System (FITS), version 3.0,''
+\newblock \emph{Astronomy \& Astrophysics}, vol. 524, p. A42, 2010.
+
+\bibitem{vernet2011xshooter}
+J.~Vernet et al.,
+\newblock ``X-shooter, the new wide-band intermediate resolution spectrograph at the ESO Very Large Telescope,''
+\newblock \emph{Astronomy \& Astrophysics}, vol. 536, p. A105, 2011.
+
+\bibitem{karttunen2016fundamental}
+H.~Karttunen, P.~Kr{\"o}ger, H.~Oja, M.~Poutanen, and K.~J.~Donner,
+\newblock \emph{Fundamental Astronomy},
+\newblock 6th~ed., Springer-Verlag, Berlin, 2016.
+
+\bibitem{zhang2015bigdata}
+Y.~Zhang and Y.~Zhao,
+\newblock ``Astronomy in the Big Data Era,''
+\newblock \emph{Data Science Journal}, vol. 14, no. 11, pp. 1--9, 2015.
+
+\bibitem{codd1970relational}
+E.~F.~Codd,
+\newblock ``A Relational Model of Data for Large Shared Data Banks,''
+\newblock \emph{Communications of the ACM}, vol. 13, no. 6, pp. 377--387, 1970.
+
+\bibitem{celko2014sql}
+J.~Celko,
+\newblock \emph{Joe Celko's Complete Guide to NoSQL: What Every SQL Professional Needs to Know about Non-Relational Databases},
+\newblock Morgan Kaufmann, 2014.
+
+\bibitem{white2012hadoop}
+T.~White,
+\newblock \emph{Hadoop: The Definitive Guide},
+\newblock 3rd~ed., O'Reilly Media, 2012.
+
+\bibitem{zaharia2016apache}
+M.~Zaharia et al.,
+\newblock ``Apache Spark: a unified engine for big data processing,''
+\newblock \emph{Communications of the ACM}, vol. 59, no. 11, pp. 56--65, 2016.
+
+\bibitem{chodorow2013mongodb}
+K.~Chodorow,
+\newblock \emph{MongoDB: The Definitive Guide},
+\newblock 2nd~ed., O'Reilly Media, 2013.
+
+\bibitem{robinson2015graph}
+I.~Robinson, J.~Webber, and E.~Eifrem,
+\newblock \emph{Graph Databases: New Opportunities for Connected Data},
+\newblock 2nd~ed., O'Reilly Media, 2015.
+
+\bibitem{lakshman2010cassandra}
+A.~Lakshman and P.~Malik,
+\newblock ``Cassandra: A Decentralized Structured Storage System,''
+\newblock \emph{ACM SIGOPS Operating Systems Review}, vol. 44, no. 2, pp. 35--40, 2010.
+
+\bibitem{carlson2013redis}
+J.~L.~Carlson,
+\newblock \emph{Redis in Action},
+\newblock Manning Publications, 2013.
+
+\bibitem{butler2016geojson}
+H.~Butler, M.~Daly, A.~Doyle, S.~Gillies, S.~Hagen, and T.~Schaub,
+\newblock ``The GeoJSON Format,''
+\newblock \emph{RFC 7946, Internet Engineering Fact Sheet}, 2016.
+
+\bibitem{mongodb_geo}
+MongoDB Inc.,
+\newblock ``Geospatial Queries with 2dsphere Indexes,''
+\newblock \emph{MongoDB Manual Documentation}, 2026.
+
+\end{thebibliography}
+
+\end{document}
