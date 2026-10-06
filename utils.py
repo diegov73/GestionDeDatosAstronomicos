@@ -77,12 +77,12 @@ def save_csv_2(resume: dict, nombre: str) -> None:
         writer.writerow(["archivo", "sumatoria_campo", "campos_sin_informacion"])
 
         for archivo, datos in resume.items():
-        writer.writerow([                                                                                                                            
-            archivo,                                                                                                                                 
-            datos["total_campos"],                                                                                                                   
-            datos["campos_sin_informacion"]                                                                                                          
-        ])                                                                                                                                           
-    print(f"archivo guardado en: {nombre}")  
+            writer.writerow([                                                                                                                            
+                archivo,                                                                                                                                 
+                datos["total_campos"],                                                                                                                   
+                datos["campos_sin_informacion"]                                                                                                          
+            ])                                                                                                                                           
+    print(f"archivo guardado en: {nombre}")
     
 def to_pandas(ruta_folder: str) -> pd.DataFrame:
     filas = []
